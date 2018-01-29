@@ -23,7 +23,7 @@ UpBack is written in Python and the easiest way to install it is to use Python's
 ::
   pip install --user git+https://github.com/DavideRossi/upback.git
 
-Alternatively download the git repository as a zipfile ("Clone or download" green button on the top left on https://github.com/DavideRossi/upback then select "Download ZIP), expand it, and from the upper upback directory run:
+Alternatively download the git repository as a zipfile ("Clone or download" green button on the top left on https://github.com/DavideRossi/upback then select "Download ZIP"), expand it, and from the upper upback directory run:
 ::
   pip install --user .
 
@@ -60,7 +60,7 @@ There are several command line options that can be used to configure the behavio
 The most common ones are:
 
 * -v
-verbose. Print various information on that UpBack is doing.
+verbose. Prints various information on that UpBack is doing.
 
 * -vv
 more verbose.
