@@ -12,6 +12,11 @@ from .upback import (PathElement, upback)
 from .configuration import Configuration
 from .const import *
 
+#TODO:
+# - create empty dir in local/remote
+# - create dir with files in it in local/remote (what happens if copy file and copy dir happens in this order?)
+# - test for backup creation on remote
+
 class UpbackTestCase(unittest.TestCase):
     """ Base test case class """
 

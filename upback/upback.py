@@ -415,7 +415,6 @@ def fix_conflicts(remote, local, remote_rel_path, remote_backup=None, backup_suf
                                 remote_suffix=backup_suffix)
                 elif resolution == "R":
                     #copy remote to local
-                    args = ["copyto", rebase(path, remote_path), path]
                     rclone.copy(rebase(path, remote_path), path)
                 elif resolution == "X":
                     #remove both local and remote
@@ -494,7 +493,7 @@ def upback():
                     perform_operations(operations, paths_a, paths_b, configuration.remote, rel_path,
                                        configuration.no_backup, configuration.remote_backup,
                                        configuration.backup_suffix)
-                    #update remote backup
+            #update remote backup
             save_backup(backup_config_path, configuration.remote)
     except UpBackException as exception:
         print str(exception)
