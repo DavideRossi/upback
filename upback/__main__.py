@@ -11,7 +11,7 @@ from .upback import upback
 from .const import *
 
 def main():
-    """ upback command lind entry point """
+    """ upback command line entry point """
     # pylint: disable=invalid-name,line-too-long
     # UpBack [{init-push|init-pull} remote [remote-backup-dir [remote-backup-suffix]]] [resume] [--rclone-path path] [--rclone-executable exec]
     #TODO improve this mess

@@ -47,15 +47,35 @@ def exclude(directory_path):
         of the upback conf files (also if they are not
         present in the directory).
     """
-    #TODO sync conf and exclude too?
     exclude_path = os.path.join(directory_path, UPBACK_EXCLUDE_FILE)
     lines = [UPBACK_EXCLUDE_FILE, UPBACK_CONF_FILE]
     if os.path.exists(exclude_path):
         with open(exclude_path, "r") as exclude_fp:
             lines += exclude_fp.read().splitlines()
-            return lines
-    else:
-        return lines
+    return lines
+
+def deep_exclude(directory_path):
+    """ Returns a list of all paths included in
+        upback exclude files for a filesystem
+        branch.
+        The list always contains the names
+        of the upback conf files for each visited
+        directory (also if they are not
+        present in the directory itself).
+    """
+    child_dirs = [entry for entry in os.listdir(directory_path) if os.path.isdir(entry)]
+    local_excludes = exclude(directory_path)
+    for local_exclude in local_excludes:
+        if local_exclude in child_dirs:
+            child_dirs.remove(local_exclude)
+    for child_dir in child_dirs:
+        child_excludes = deep_exclude(child_dir)
+        for child_exclude in child_excludes:
+            if directory_path != ".":
+                local_excludes.append(directory_path+"/"+child_dir+"/"+child_exclude)
+            else:
+                local_excludes.append(child_dir+"/"+child_exclude)
+    return local_excludes
 
 def find_backup_branch(path="", climb=True):
     """ Climbs the directory structure looking for a directory
@@ -190,7 +210,7 @@ def cleanup():
     remove_lock_file()
 
 def save_backup(backup_path, remote):
-    """ Saves a backup by saving the result of rclone lsjson into the backup file
+    """ Saves a backup by storing the result of rclone lsjson into the backup file
     """
     try:
         rclone = RClone()
@@ -199,7 +219,7 @@ def save_backup(backup_path, remote):
         with open(os.path.join(backup_path, UPBACK_REMOTE_BACKUP), "w") as backup_fp:
             backup_fp.write(output)
     except ValueError:
-        print output
+        print(output)
         raise UpBackException("Invalid backup file format")
 
 def retrieve_backup(backup_path, rel_path):
@@ -224,7 +244,7 @@ def retrieve_backup(backup_path, rel_path):
         return None
 
 def compact_deletes(delete_ops, path_elements):
-    """ Compacts delete operations so that is a directory is to be deleted
+    """ Compacts delete operations so that if a directory is to be deleted
         deletion of contained elements is ignored
     """
     dir_elements = []
@@ -292,6 +312,8 @@ def merge_and_exclude_paths(paths_a, paths_b, rel_path, local_excludes, global_e
     for path in paths_b:
         paths_all.add(path)
     for path_to_exclude in local_excludes:
+        if path_to_exclude.startswith("./"):
+            path_to_exclude = path_to_exclude[2:]
         if path_to_exclude in paths_all:
             paths_all.remove(path_to_exclude)
     for global_path_to_exclude in global_excludes + [UPBACK_CONF_FILE+".lock", UPBACK_REMOTE_BACKUP]:
@@ -462,6 +484,8 @@ def upback():
         if configuration.resume:
             exclude_paths = fix_conflicts(configuration.remote, os.getcwd(), rel_path,
                                           configuration.remote_backup, configuration.backup_suffix)
+        #retrieve exclusion list from local file
+        exclude_paths += deep_exclude(".")
         #list .
         paths_a = rclone_ls(".")
         #list remote+path from conf file
@@ -473,20 +497,18 @@ def upback():
         paths_b_backup = retrieve_backup(backup_config_path, rel_path)
         if paths_b_backup is None:
             raise UpBackException("No remote backup file found. Run with an init option")
-        #compute excludes locally and filter globally
-        #TODO
         #compute operations
         operations = compute_operations(paths_all, paths_a, paths_b_backup, paths_b)
         logging.info("operations: "+str(operations))
         if operations.conflicts:
             write_conflicts(operations.conflicts, paths_a, paths_b)
-            print "UpBack cannot perform the synchronization because of conflicts."
-            print "Please edit the "+UPBACK_CONFLICTS_FILE+" file to instruct"
-            print "how to manage conflicts, then run UpBack again."
+            print("UpBack cannot perform the synchronization because of conflicts.")
+            print("Please edit the "+UPBACK_CONFLICTS_FILE+" file and decide")
+            print("how to manage conflicts, then run UpBack again.")
         else:
             if operations and not operations.is_empty():
                 if configuration.verbose or configuration.interactive:
-                    print operations.pretty_format()
+                    print(operations.pretty_format())
                 if not configuration.interactive or \
                    raw_input("Proceed with these operations ? (Y/N) ").lower() == "y":
                     #perform operations
@@ -496,7 +518,7 @@ def upback():
             #update remote backup
             save_backup(backup_config_path, configuration.remote)
     except UpBackException as exception:
-        print str(exception)
+        print(str(exception))
         return STATUS_ERROR
     finally:
         cleanup()

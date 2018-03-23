@@ -11,11 +11,8 @@
             "stopOnEntry": false,
             "pythonPath": "${config:python.pythonPath}",
             "module": "upback.tests",
-            "cwd": "${workspaceFolder}/..",
+            "cwd": "${workspaceFolder}",
             "env": {},
-            "args": [
-                "-m"
-            ],
             "envFile": "${workspaceFolder}/.env",
             "debugOptions": [
                 "RedirectOutput"

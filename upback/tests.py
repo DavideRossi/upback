@@ -53,6 +53,8 @@ class UpbackTestCase(unittest.TestCase):
             "a/a1.txt": "12",
             "a/a2.txt": "123",
             "a/b/b1.txt": "1234",
+            "a/b/.upback.exclude": "excluded",
+            "a/b/excluded/exclude.me": "12345",
             "c/local2/a/a1.txt": "12",
             "c/local2/a/a2.txt": "123",
             "c/local2/a/b/b1.txt": "1234"
