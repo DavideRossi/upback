@@ -60,7 +60,7 @@ There are several command line options that can be used to configure the behavio
 The most common ones are:
 
 * -v
-verbose. Prints various information on that UpBack is doing.
+verbose. Prints various information on what UpBack is doing.
 
 * -vv
 more verbose.
@@ -73,7 +73,7 @@ FAQ
 * Are symlinks supported?
 No, symlinks are deliberately skipped. 
 If you need them consider to store the "real" files and directories in the local backup branch and link to it from somewhere else.
-For example, if you want to backup a src/myproject directory that is outside an UpBack backup branch, put the real myproject directory inside the local UpBack branch, than link is from src/.
+For example, if you want to backup a src/myproject directory that is outside an UpBack backup branch, put the real myproject directory inside the local UpBack branch, then link it from src/.
 
 * What happens if I decide to ignore a conflict
 One of the options that can be specified in the conflict file is to ignore a path.
