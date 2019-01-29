@@ -15,8 +15,8 @@ from .rclone import RClone
 from .configuration import Configuration
 from .path_element import PathElement
 from .operations import Operations
-from .util import lock_file, remove_lock_file
-from .const import *
+from .util import lock_file, remove_lock_file, is_path_local, wildcard_match
+from .const import * # pylint: disable=unused-wildcard-import
 
 class UpBackException(Exception):
     """ Application exception """
@@ -29,7 +29,7 @@ def rclone_ls(path):
         each entry is another dictionary with
         path details
     """
-    is_local = False if ":" in path else True
+    is_local = is_path_local(path)
     rclone = RClone()
     output = rclone.lsjson(path)
     paths_list = json.loads(output)
@@ -40,42 +40,47 @@ def rclone_ls(path):
         paths[path_entry.path] = path_entry
     return paths
 
+#TODO use some kind of caching
 def exclude(directory_path):
     """ Returns a list of paths included in an
         upback exclude file.
-        The list always contains the names
-        of the upback conf files (also if they are not
-        present in the directory).
     """
+    lines = []
+    #TODO was lines = [UPBACK_EXCLUDE_FILE, UPBACK_CONF_FILE]
     exclude_path = os.path.join(directory_path, UPBACK_EXCLUDE_FILE)
-    lines = [UPBACK_EXCLUDE_FILE, UPBACK_CONF_FILE]
     if os.path.exists(exclude_path):
         with open(exclude_path, "r") as exclude_fp:
             lines += exclude_fp.read().splitlines()
     return lines
 
-def deep_exclude(directory_path):
-    """ Returns a list of all paths included in
-        upback exclude files for a filesystem
-        branch.
-        The list always contains the names
-        of the upback conf files for each visited
-        directory (also if they are not
-        present in the directory itself).
+def exclude_filter(directory_path, path, basename=None):
+    """ Starting from directory_path evaluates all
+        local excludes to see if path is to be filtered.
+        path is assumed to be a relative path into directory_path.
+        An actual file/dir at path is not required to exist.
     """
-    child_dirs = [entry for entry in os.listdir(directory_path) if os.path.isdir(entry)]
-    local_excludes = exclude(directory_path)
+    if not is_path_local(directory_path):
+        return False
+    if path == "":
+        return False
+    (head, tail) = os.path.split(path)
+    if basename is None:
+        basename = tail #we store this to later support subdir wildcards like **/match
+    local_excludes = exclude(os.path.join(directory_path, head))
     for local_exclude in local_excludes:
-        if local_exclude in child_dirs:
-            child_dirs.remove(local_exclude)
-    for child_dir in child_dirs:
-        child_excludes = deep_exclude(child_dir)
-        for child_exclude in child_excludes:
-            if directory_path != ".":
-                local_excludes.append(directory_path+"/"+child_dir+"/"+child_exclude)
-            else:
-                local_excludes.append(child_dir+"/"+child_exclude)
-    return local_excludes
+        if wildcard_match(tail, local_exclude):
+            return True
+    return exclude_filter(directory_path, head, basename)
+
+def filter_exclude_paths(base_path, paths):
+    """ Apply exclude_filter to a set of paths relative
+        to a base_path
+    """
+    retval = dict()
+    for path in paths.keys():
+        if not exclude_filter(base_path, path):
+            retval[path] = paths[path]
+    return retval
 
 def find_backup_branch(path="", climb=True):
     """ Climbs the directory structure looking for a directory
@@ -391,17 +396,18 @@ def init_pull():
     """
     backup_config = find_backup_branch(climb=False)
     configuration = Configuration()
+    local_is_empty = len(rclone_ls(".")) == 0
     if backup_config and configuration.remote:
-        raise UpBackException("An UpBack configuration file is present, "
-                              "remote argument cannot be used")
+        raise UpBackException("The current directory is already the root of "
+                              "an existing UpBack backup")
     elif not backup_config:
-        configuration.write(UPBACK_CONF_FILE)
-    else:
-        configuration.read_file(backup_config)
-    #sync local -> remote
-    if not configuration.force:
-        if len(rclone_ls(configuration.remote)) > 1: #1 because of the conf file
+        if not local_is_empty and not configuration.force:
             raise UpBackException("Local is not empty. To force initialization use --force")
+        else:
+            configuration.write(UPBACK_CONF_FILE)
+    else: #TODO: part of an existing UpBack backup branch but no remote - does it make sense?
+        configuration.read_file(backup_config)
+    #sync remote -> local
     args = ["sync", configuration.remote, "."]
     rclone = RClone()
     rclone.run(args)
@@ -484,10 +490,10 @@ def upback():
         if configuration.resume:
             exclude_paths = fix_conflicts(configuration.remote, os.getcwd(), rel_path,
                                           configuration.remote_backup, configuration.backup_suffix)
-        #retrieve exclusion list from local file
-        exclude_paths += deep_exclude(".")
         #list .
         paths_a = rclone_ls(".")
+        #process local excludes (only for local branches)
+        paths_a = filter_exclude_paths(os.getcwd(), paths_a)
         #list remote+path from conf file
         paths_b = rclone_ls(os.path.join(configuration.remote, rel_path))
         #compute all paths

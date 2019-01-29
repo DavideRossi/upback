@@ -4,6 +4,16 @@ Misc utilities
 
 import datetime
 import os
+import fnmatch
+
+#TODO: implement a more refined matching
+# e.g. wildcard/ only matches dirs
+# and others similarly to .gitignore
+def wildcard_match(item, wildcard):
+    return fnmatch.fnmatch(item, wildcard)
+
+def is_path_local(path):
+    return not ":" in path
 
 def parse_rfc3339(datetime_string):
     """ Returns a datetime object for
@@ -41,7 +51,6 @@ def lock_file(path):
         Returns True if the lockfile was absent and has been created
         Returns False if the lockfile was already present
     """
-    # pylint: disable=global-statement
     #TODO if open fails and the lockfile is present, check its creation date
     # and, if it's more than ??? remove it and retry
     # pylint: disable=global-statement

@@ -1,0 +1,16 @@
+{
+    "files.exclude": {
+    "**/.git": true,
+    "**/*.pyc": true
+  },
+  "python.unitTest.unittestArgs": [
+    "-v",
+    "-s",
+    "./upback",
+    "-p",
+    "tests.py"
+  ],
+  "python.unitTest.pyTestEnabled": false,
+  "python.unitTest.nosetestsEnabled": false,
+  "python.unitTest.unittestEnabled": false
+}
