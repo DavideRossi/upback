@@ -68,6 +68,16 @@ more verbose.
 * -i
 interactive. Asks before performing synchronization operations.
 
+Exclude (ignore) files and directories
+--------------------------------------
+There are two ways to exclude single files or whole branches from the fileset that is synchronized.
+The first way is to use the "global_excludes" field in .upback.config. This is simply a list of the (relative path of the) elements that should not be considered.
+The second way is to use .upback.exclude files.
+Each line in a .upback.exclude file is a pattern against which elements in THE SAME directory containing the .upback.exclude are matched. 
+If the match succeeds the element (can be a file or a sub directory) is ignored.
+Of course, in the case of a sub directory, everything inside that sub directory is ignored as well.
+Notice that this applies only to elements of a local filesystem; .upback.exclude in remote filesystems are NOT processed.
+
 FAQ
 ---
 * Are symlinks supported?

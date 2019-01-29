@@ -167,7 +167,7 @@ class UpbackTestCase(unittest.TestCase):
         return False
 
     # Used to compare a branch with its expected contents.
-    def path_contains(self, path, path_elements, obeysExcludes=True):
+    def path_contains(self, path, path_elements, obeysExcludes=False):
         """ Checks if a path contains the specified elements """
         args = ["lsjson", "-R", path]
         output = self.rclone.run(args)
@@ -175,7 +175,7 @@ class UpbackTestCase(unittest.TestCase):
         paths = {}
         excluded_paths = [ UPBACK_REMOTE_BACKUP ]
         for path_json in paths_list:
-            if not path_json["Path"] in excluded_paths:
+            if not path_json["Path"] in excluded_paths and not (obeysExcludes and exclude_filter(path, path_json["Path"])): #TODO: what about simplify this?
                 path_entry = PathElement.from_json(path_json)
                 paths[path_entry.path] = path_entry
         if len(paths) != len(path_elements):
