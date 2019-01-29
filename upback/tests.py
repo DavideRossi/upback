@@ -12,6 +12,13 @@ from .upback import PathElement, upback, exclude_filter
 from .configuration import Configuration
 from .const import * # pylint: disable=unused-wildcard-import
 
+# This is a very bad example of test set, the main reason is that tests are not independent.
+# This is because we relay on each test to perform a clean-up and restore the state of local and remote (and that of some class members as well).
+# If a test fails and is unable to perform the clean-up, subsequent tests will have to operate on a wrong state and are probably doomed to fail.
+# The rationale behind this design decision is really just performances. The tests can be run against whichever combination of local and remote
+# branches, the more prompt way is to point both local and remote to local filesystem paths (and in this case performances are not a concern)
+# but if you start testing against a remote rclone branch things can get really slow.
+
 #TODO:
 # - create empty dir in local/remote
 # - create dir with files in it in local/remote (what happens if copy file and copy dir happens in this order?)
@@ -43,51 +50,51 @@ class UpbackTestCase(unittest.TestCase):
 
         cls.rclone.mkdir(cls.localroot+"/a")
         cls.rclone.mkdir(cls.localroot+"/a/b")
-        cls.rclone.mkdir(cls.localroot+"/a/b/excluded")
         cls.rclone.mkdir(cls.localroot+"/c")
         cls.rclone.mkdir(cls.localroot+"/a/d")
+        cls.rclone.mkdir(cls.localroot+"/a/e")
+        cls.rclone.mkdir(cls.localroot+"/a/e/exclude")
         cls.rclone.mkdir(cls.localroot+"/c/local2")
         cls.rclone.mkdir(cls.localroot+"/c/local2/a")
         cls.rclone.mkdir(cls.localroot+"/c/local2/a/b")
-        cls.rclone.mkdir(cls.localroot+"/c/local2/a/b/excluded")
         cls.rclone.mkdir(cls.localroot+"/c/local2/a/d")
+        cls.rclone.mkdir(cls.localroot+"/c/local2/a/e")
+        cls.rclone.mkdir(cls.localroot+"/c/local2/a/e/exclude")
         cls.file_contents = {
             "a/a1.txt": "12",
             "a/a2.txt": "123",
             "a/b/b1.txt": "1234",
-            "a/b/"+UPBACK_EXCLUDE_FILE: "excluded",
-            "a/b/excluded/exclude.me": "12345",
+            "a/e/exclude/exclude.me": "12345",
             "c/local2/a/a1.txt": "12",
             "c/local2/a/a2.txt": "123",
             "c/local2/a/b/b1.txt": "1234",
-            "c/local2/a/b/"+UPBACK_EXCLUDE_FILE: "excluded",
-            "c/local2/a/b/excluded/exclude.me": "12345",
+            "c/local2/a/e/exclude/exclude.me": "12345",
         }
         cls.local = cls.localroot
         for path in cls.file_contents:
             cls.write_file_local(path)
         # This is what we expect to find after a successful synch
-        # elements excluded by UPBACK_EXCLUDE_FILE are not
-        # present here.
-        # When reading a branch to compare it to this collection
-        # the read elements are filtered using upback's exclude_filter
         cls.path_contents = {
             "a": PathElement("a", is_directory=True),
             "a/b": PathElement("a/b", is_directory=True),
             "c": PathElement("c", is_directory=True),
             "a/d": PathElement("a/d", is_directory=True),
+            "a/e": PathElement("a/e", is_directory=True),
+            "a/e/exclude": PathElement("a/e/exclude", is_directory=True),
             "c/local2": PathElement("c/local2", is_directory=True),
             "c/local2/a": PathElement("c/local2/a", is_directory=True),
             "c/local2/a/b": PathElement("c/local2/a/b", is_directory=True),
+            "c/local2/a/e": PathElement("c/local2/a/e", is_directory=True),
+            "c/local2/a/e/exclude": PathElement("c/local2/a/e/exclude", is_directory=True),
             "c/local2/a/d": PathElement("c/local2/a/d", is_directory=True),
             "a/a1.txt": PathElement("a/a1.txt", is_directory=False, size=len(cls.file_contents["a/a1.txt"])),
             "a/a2.txt": PathElement("a/a2.txt", is_directory=False, size=len(cls.file_contents["a/a2.txt"])),
             "a/b/b1.txt": PathElement("a/b/b1.txt", is_directory=False, size=len(cls.file_contents["a/b/b1.txt"])),
-            "a/b/"+UPBACK_EXCLUDE_FILE: PathElement("a/b/"+UPBACK_EXCLUDE_FILE, is_directory=False, size=len(cls.file_contents["a/b/"+UPBACK_EXCLUDE_FILE])),
+            "a/e/exclude/exclude.me": PathElement("a/e/exclude/exclude.me", is_directory=False, size=len(cls.file_contents["a/e/exclude/exclude.me"])),
             "c/local2/a/a1.txt": PathElement("c/local2/a/a1.txt", is_directory=False, size=len(cls.file_contents["c/local2/a/a1.txt"])),
             "c/local2/a/a2.txt": PathElement("c/local2/a/a2.txt", is_directory=False, size=len(cls.file_contents["c/local2/a/a2.txt"])),
             "c/local2/a/b/b1.txt": PathElement("c/local2/a/b/b1.txt", is_directory=False, size=len(cls.file_contents["c/local2/a/b/b1.txt"])),
-            "c/local2/a/b/"+UPBACK_EXCLUDE_FILE: PathElement("c/local2/a/b/"+UPBACK_EXCLUDE_FILE, is_directory=False, size=len(cls.file_contents["c/local2/a/b/"+UPBACK_EXCLUDE_FILE])),
+            "c/local2/a/e/exclude/exclude.me": PathElement("c/local2/a/e/exclude/exclude.me", is_directory=False, size=len(cls.file_contents["c/local2/a/e/exclude/exclude.me"])),
             UPBACK_CONF_FILE: PathElement(UPBACK_CONF_FILE, is_directory=False, size=-1)
         }
 
@@ -160,9 +167,6 @@ class UpbackTestCase(unittest.TestCase):
         return False
 
     # Used to compare a branch with its expected contents.
-    # Read elements are filtered using upback's exclude_filter 
-    # (since elements excluded by UPBACK_EXCLUDE_FILE
-    # are not expected to be there, although they could be)
     def path_contains(self, path, path_elements, obeysExcludes=True):
         """ Checks if a path contains the specified elements """
         args = ["lsjson", "-R", path]
@@ -171,7 +175,7 @@ class UpbackTestCase(unittest.TestCase):
         paths = {}
         excluded_paths = [ UPBACK_REMOTE_BACKUP ]
         for path_json in paths_list:
-            if not path_json["Path"] in excluded_paths and not exclude_filter(path, path_json["Path"]):
+            if not path_json["Path"] in excluded_paths:
                 path_entry = PathElement.from_json(path_json)
                 paths[path_entry.path] = path_entry
         if len(paths) != len(path_elements):
@@ -449,10 +453,8 @@ class UpbackTestCase(unittest.TestCase):
         self.run_upback_from(self.local)
         path_element_b = self.path_contents["a/b"]
         path_element_b1_txt = self.path_contents["a/b/b1.txt"]
-        path_element_ubexclude = self.path_contents["a/b/"+UPBACK_EXCLUDE_FILE]
         del self.path_contents["a/b"]
         del self.path_contents["a/b/b1.txt"]
-        del self.path_contents["a/b/"+UPBACK_EXCLUDE_FILE]
         contents = self.path_contents.items()
         local_matches = self.path_contains(self.local, contents)
         remote_matches = self.path_contains(self.remote, contents)
@@ -461,9 +463,7 @@ class UpbackTestCase(unittest.TestCase):
         self.rclone.mkdir(self.remote+"/a/b")
         self.path_contents["a/b"] = path_element_b
         self.path_contents["a/b/b1.txt"] = path_element_b1_txt
-        self.path_contents["a/b/"+UPBACK_EXCLUDE_FILE] = path_element_ubexclude
         self.write_file_local_and_remote("a/b/b1.txt")
-        self.write_file_local_and_remote("a/b/"+UPBACK_EXCLUDE_FILE)
         self.run_upback_from(self.local)
         #assert
         self.assertTrue(local_matches)
@@ -493,10 +493,8 @@ class UpbackTestCase(unittest.TestCase):
         self.run_upback_from(self.local)
         path_element_b = self.path_contents["a/b"]
         path_element_b1_txt = self.path_contents["a/b/b1.txt"]
-        path_element_ubexclude = self.path_contents["a/b/"+UPBACK_EXCLUDE_FILE]
         del self.path_contents["a/b"]
         del self.path_contents["a/b/b1.txt"]
-        del self.path_contents["a/b/"+UPBACK_EXCLUDE_FILE]
         contents = self.path_contents.items()
         local_matches = self.path_contains(self.local, contents)
         remote_matches = self.path_contains(self.remote, contents)
@@ -505,9 +503,7 @@ class UpbackTestCase(unittest.TestCase):
         self.rclone.mkdir(self.remote+"/a/b")
         self.path_contents["a/b"] = path_element_b
         self.path_contents["a/b/b1.txt"] = path_element_b1_txt
-        self.path_contents["a/b/"+UPBACK_EXCLUDE_FILE] = path_element_ubexclude
         self.write_file_local_and_remote("a/b/b1.txt")
-        self.write_file_local_and_remote("a/b/"+UPBACK_EXCLUDE_FILE)
         self.run_upback_from(self.local)
         #assert
         self.assertTrue(local_matches)
@@ -608,6 +604,38 @@ class UpbackTestCase(unittest.TestCase):
         contents = self.path_contents.items()
         local_matches = self.path_contains(self.local, contents)
         remote_matches = self.path_contains(self.remote, contents)
+        #assert
+        self.assertTrue(local_matches)
+        self.assertTrue(remote_matches)
+
+    def test_local_exclude_file(self):
+        """ create local with init_pull """
+#        self.skipTest("pipppero")
+        #create exclude file and delete excluded file in remote
+        excluded_file_path = "a/e/exclude/exclude.me"
+        exclude_file_path = "a/e/exclude/"+UPBACK_EXCLUDE_FILE
+        exclude_file_contents = "exclude.me"
+        self.file_contents[exclude_file_path] = exclude_file_contents
+        self.write_file_local(exclude_file_path)
+        self.rclone.delete(self.remote+"/"+excluded_file_path)
+        #now excluded_file_path exists in local and does not exist in remote
+        self.run_upback_from(self.local)
+        #we expect to find the exclude file AND the excluded file in local
+        self.path_contents[exclude_file_path] = PathElement(exclude_file_path, is_directory=False, size=len(exclude_file_contents))
+        contents = self.path_contents.items()
+        local_matches = self.path_contains(self.local, contents)
+        #we expect to find the exclude file BUT NOT the excluded file in remote
+        path_element = self.path_contents[excluded_file_path]
+        del self.path_contents[excluded_file_path]
+        contents = self.path_contents.items()
+        remote_matches = self.path_contains(self.remote, contents)
+        #restore
+        self.path_contents[excluded_file_path] = path_element
+        del self.path_contents[exclude_file_path]
+        del self.file_contents[exclude_file_path]
+        self.rclone.delete(self.local+"/"+exclude_file_path)
+        self.rclone.delete(self.remote+"/"+exclude_file_path)
+        self.run_upback_from(self.local)
         #assert
         self.assertTrue(local_matches)
         self.assertTrue(remote_matches)
