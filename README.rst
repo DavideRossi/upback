@@ -77,6 +77,13 @@ Each line in a .upback.exclude file is a pattern against which elements in THE S
 If the match succeeds the element (can be a file or a sub directory) is ignored.
 Of course, in the case of a sub directory, everything inside that sub directory is ignored as well.
 Notice that this applies only to elements of a local filesystem; .upback.exclude in remote filesystems are NOT processed.
+Be warned that this could result in some counter intuitive behavior when items are added to a .upback.exclude file AFTER having been synchronized already: 
+suppose you have a a/b.txt file and that, after having that synchronized with a remote, you decide to create a a/.upback.exclude containing “b.txt”.
+When you run UpBack, it does not see a/b.txt in the local fileset (because it is excluded) but it does see remote:a/b.txt in the remote fileset because 
+that has been created in a previous synchronization.
+As a result the local a/b.txt (that is invisible to the eye of UpBack) is overwritten with the (possibly outdated) version stored in remote. 
+Please understand that this can cause DATA LOSS so be very careful. I’m thinking about a better way to deal with these cases, when I find a convincing approach I will implement it 
+(and I’m open to suggestions, you can create an enhancement issue in GitHub to get in touch).
 
 FAQ
 ---
