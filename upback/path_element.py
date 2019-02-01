@@ -7,24 +7,25 @@ import os
 import logging
 
 from .util import parse_rfc3339
-from const import *
+from const import * # pylint: disable=unused-wildcard-import
 
 class PathElement(object):
     """ Path elements - we synchronize these
     """
-    def __init__(self, path, time_stamp=0, size=0, is_directory=False, is_local=True):
-        self.init(path, time_stamp, size, is_directory, is_local)
+    def __init__(self, path, time_stamp=0, time_accuracy=0, size=0, is_directory=False, is_local=True):
+        self.init(path, time_stamp, time_accuracy, size, is_directory, is_local)
 
     def __eq__(self, other):
         if type(other) is type(self):
             return self.__dict__ == other.__dict__
         return False
 
-    def init(self, path, time_stamp, size, is_directory, is_local):
+    def init(self, path, time_stamp, time_accuracy, size, is_directory, is_local):
         """ Initialize a PathElement
         """
         self.path = path
         self.time_stamp = time_stamp
+        self.time_accuracy = time_accuracy
         self.size = size
         self.is_directory = is_directory
         self.is_local = is_local
@@ -59,5 +60,5 @@ class PathElement(object):
         path_name = path_json["Path"]
         path_is_dir = True if path_json["IsDir"] else False
         path_size = path_json["Size"]
-        path_datetime = parse_rfc3339(path_json["ModTime"])
-        return cls(path_name, path_datetime, path_size, path_is_dir, is_local)
+        (path_datetime, path_time_accuracy) = parse_rfc3339(path_json["ModTime"], report_accuracy=True)
+        return cls(path_name, path_datetime, path_time_accuracy, path_size, path_is_dir, is_local)

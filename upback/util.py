@@ -15,7 +15,7 @@ def wildcard_match(item, wildcard):
 def is_path_local(path):
     return not ":" in path
 
-def parse_rfc3339(datetime_string):
+def parse_rfc3339(datetime_string, report_accuracy=False):
     """ Returns a datetime object for
         a RFC3339-formatted string
     """
@@ -32,9 +32,11 @@ def parse_rfc3339(datetime_string):
         datetime_string, _, datetime_offset = datetime_string.partition(zone_sep)
         timezone = zone_sep+datetime_offset.replace(":", "")
     microseconds = 0
+    accuracy = 0
     if "." in datetime_time_string:
         datetime_string, _, datetime_ns = datetime_string.partition(".")
         microseconds = int(float("0."+datetime_ns)*1000)
+        accuracy = len(datetime_ns)
     time_3339 = datetime.datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%S")
     hours = int(timezone[1:3])
     minutes = int(timezone[3:5])
@@ -44,7 +46,10 @@ def parse_rfc3339(datetime_string):
     else:
         time_3339 += timezone_delta
     time_3339 = time_3339.replace(microsecond=microseconds)
-    return time_3339
+    if report_accuracy:
+        return (time_3339, accuracy)
+    else:
+        return time_3339
 
 def lock_file(path):
     """ Creates a lockfile
