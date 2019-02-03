@@ -687,7 +687,6 @@ class UpbackTestCase(unittest.TestCase):
         #os.stat: "Python now returns float values by default" but floats lose at least 3 decimals for ns-precision filesystems
         #so reading timestamps with os.stat and writing them with os.utime should reduce precision (hopefully)
         short_stat = os.stat(short_path)
-        long_stat = os.stat(long_path)
         os.utime(short_path, (short_stat.st_mtime, short_stat.st_mtime))
         paths = rclone_ls(os.path.join(self.local, "a/d"))
         os.remove(short_path)
