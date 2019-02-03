@@ -2,8 +2,12 @@
 
 import os
 import logging
+import json
 import subprocess
 import tempfile
+import re
+
+from .util import parse_rfc3339
 
 class RClone(object):
     """ Wrapper class around the rclone executable """
@@ -21,6 +25,7 @@ class RClone(object):
             self.rclone_file = rclone_executable
         else:
             self.rclone_file = os.path.join(rclone_path, rclone_executable)
+        self.harmonize_timestamp_precision = True #TODO: set this depending on rclone version
 
     def backup_operation(self, args, no_backup=False, remote_backup=None, remote_suffix=None):
         """ Backup-aware operation """
@@ -63,7 +68,28 @@ class RClone(object):
 
     def lsjson(self, path):
         args = ["lsjson", "-R", "--skip-links", path]
-        return self.run(args)
+        output = self.run(args)
+        if self.harmonize_timestamp_precision:
+            top_precision = 0
+            paths_list = json.loads(output)
+            for path_json in paths_list:
+                datetime = path_json["ModTime"]
+                (_, time_precision) = parse_rfc3339(datetime, report_precision=True)
+                if time_precision > top_precision:
+                    top_precision = time_precision
+            #now make all timestamps use the same number of decimal digits
+            #TODO: use it only with older version of rclone
+            def replacer(matchobj):
+                time = matchobj.group(1)
+                decimal = matchobj.group(2)
+                if not decimal:
+                    decimal = "."
+                return time+(decimal+("0"*top_precision))[0:top_precision+1]
+            for path_json in paths_list:
+                path_json["ModTime"] = re.sub(r'(\d\d?:\d\d?:\d\d?)(\.\d+)?', replacer, path_json["ModTime"])
+            return json.dumps(paths_list)
+        else:
+            return output
 
     def write_file(self, path, content):
         """ Writes content to a file. Operates by creating a tempfile and moving

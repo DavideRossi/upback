@@ -2,7 +2,8 @@
 
 import json
 import datetime
-from const import *
+
+from .const import *
 
 class Configuration(object):
     """ Configuration class

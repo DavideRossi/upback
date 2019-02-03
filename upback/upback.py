@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-UpBack: synchronize (both ways) two filesystem braches using
+UpBack: synchronize (both ways) two filesystem branches using
 rclone, so that you can sync local and remote file systems
 on Amazon Cloud Drive, Google Drive, Dropbox, etc...
 """
@@ -22,7 +22,7 @@ class UpBackException(Exception):
     """ Application exception """
     pass
 
-def rclone_ls(path, harmonize_time_accuracy=False):
+def rclone_ls(path):
     """ Returns a dictionary of paths
         as retrieved by rclone lsjson
         Pathnames are the keys of the dictionary,
@@ -34,16 +34,10 @@ def rclone_ls(path, harmonize_time_accuracy=False):
     output = rclone.lsjson(path)
     paths_list = json.loads(output)
     paths = {}
-    top_accuracy = 0
     for path in paths_list:
         path_entry = PathElement.from_json(path)
-        if path_entry.time_accuracy > top_accuracy:
-            top_accuracy = path_entry.time_accuracy
         path_entry.is_local = is_local
         paths[path_entry.path] = path_entry
-    if harmonize_time_accuracy:
-        for path in paths:
-            paths[path].accuracy = top_accuracy
     return paths
 
 #TODO use some kind of caching
@@ -93,7 +87,7 @@ def find_backup_branch(path="", climb=True):
         containing an upback configuration file.
         Returns the path to that configuration file
         if any, None otherwise.
-        None is also returned if climbing back the hierachy
+        None is also returned if climbing back the hierarchy
         it finds that the current branch is excluded by
         the parent
     """
@@ -233,22 +227,16 @@ def save_backup(backup_path, remote):
         print(output)
         raise UpBackException("Invalid backup file format")
 
-def retrieve_backup(backup_path, rel_path, harmonize_time_accuracy=False):
+def retrieve_backup(backup_path, rel_path):
     """ Retrieves the backup for remote
         filtering out upper paths.
-        If harmonize_accuracy is set to trye all path elements in
-        the returned dictionary have the same accuracy
-        (which is the highest between the elements)
     """
     try:
         with open(os.path.join(backup_path, UPBACK_REMOTE_BACKUP), "r") as backup_fp:
             paths_json = json.load(backup_fp)
             paths = {}
-            top_accuracy = 0
             for path in paths_json:
                 path_entry = PathElement.from_json(path)
-                if path_entry.time_accuracy > top_accuracy:
-                    top_accuracy = path_entry.time_accuracy
                 prefix = rel_path
                 if prefix != "":
                     prefix += "/"
@@ -256,9 +244,6 @@ def retrieve_backup(backup_path, rel_path, harmonize_time_accuracy=False):
                     new_path = path_entry.path[len(prefix):]
                     path_entry.path = new_path
                     paths[path_entry.path] = path_entry
-            if harmonize_time_accuracy:
-                for path in paths:
-                    paths[path].time_accuracy = top_accuracy
             return paths
     except IOError:
         return None
@@ -515,7 +500,7 @@ def upback():
         paths_all = merge_and_exclude_paths(paths_a, paths_b, rel_path, exclude_paths,
                                             configuration.global_excludes)
         #retrieve remote backup
-        paths_b_backup = retrieve_backup(backup_config_path, rel_path, harmonize_time_accuracy=True)
+        paths_b_backup = retrieve_backup(backup_config_path, rel_path)
         if paths_b_backup is None:
             raise UpBackException("No remote backup file found. Run with an init option")
         #compute operations

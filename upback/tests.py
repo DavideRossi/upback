@@ -7,8 +7,9 @@ import os
 import tempfile
 import logging
 import json
+
 from .rclone import RClone
-from .upback import PathElement, upback, exclude_filter
+from .upback import PathElement, upback, exclude_filter, rclone_ls
 from .configuration import Configuration
 from .const import * # pylint: disable=unused-wildcard-import
 
@@ -673,6 +674,25 @@ class UpbackTestCase(unittest.TestCase):
         #assert
         self.assertTrue(local_matches)
         self.assertTrue(remote_matches)
+
+    def test_uneven_timestamp_precision(self):
+        """ check that rclone.lsjson returns all timestamps with the same precision """
+        #we assume that /a/d is empty
+        short_path = os.path.join(self.local, "a/d/short")
+        long_path = os.path.join(self.local, "a/d/long")
+        with open(short_path, "w") as short:
+            short.write("short")
+        with open(long_path, "w") as long:
+            long.write("long")
+        #os.stat: "Python now returns float values by default" but floats lose at least 3 decimals for ns-precision filesystems
+        #so reading timestamps with os.stat and writing them with os.utime should reduce precision (hopefully)
+        short_stat = os.stat(short_path)
+        long_stat = os.stat(long_path)
+        os.utime(short_path, (short_stat.st_mtime, short_stat.st_mtime))
+        paths = rclone_ls(os.path.join(self.local, "a/d"))
+        os.remove(short_path)
+        os.remove(long_path)
+        self.assertTrue(paths["short"].time_precision == (paths["long"].time_precision))
 
 # thanks Python for this awesome class attribute initialization!
 UpbackTestCase.remote = None
