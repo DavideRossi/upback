@@ -18,7 +18,7 @@ class Configuration(object):
         return singleton
 
     def setup(self, arguments):
-        """ Initialization method, called on singleton instatiation """
+        """ Initialization method, called on singleton instantiation """
         arguments_map = vars(arguments)
         self.nonpersistent_settings = ["nonpersistent_settings"]
         self.init_pull = True if "init_pull" in arguments_map else False
