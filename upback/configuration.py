@@ -7,7 +7,7 @@ from .const import *
 
 class Configuration(object):
     """ Configuration class
-        Field are read from json file
+        Fields are read from json file
     """
     def __new__(cls, *args, **kwds):
         singleton = cls.__dict__.get("__it__")
