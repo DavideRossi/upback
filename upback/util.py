@@ -9,8 +9,15 @@ import fnmatch
 #TODO: implement a more refined matching
 # e.g. wildcard/ only matches dirs
 # and others similarly to .gitignore
-def wildcard_match(item, wildcard):
-    return fnmatch.fnmatch(item, wildcard)
+def wildcard_match(item, base, wildcard):
+    """ Check whether item is matched by wildcard.
+        If wildcard is **/match checks if base matches match
+    """
+    if wildcard.startswith("**/"):
+        wildcard = wildcard[3:]
+        return fnmatch.fnmatch(base, wildcard)
+    else:
+        return fnmatch.fnmatch(item, wildcard)
 
 def is_path_local(path):
     return not ":" in path

@@ -70,7 +70,7 @@ def exclude_filter(directory_path, path, basename=None):
         basename = tail #we store this to later support subdir wildcards like **/match
     local_excludes = exclude(os.path.join(directory_path, head))
     for local_exclude in local_excludes:
-        if wildcard_match(tail, local_exclude):
+        if wildcard_match(tail, basename, local_exclude):
             return True
     return exclude_filter(directory_path, head, basename)
 
