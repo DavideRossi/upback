@@ -57,6 +57,8 @@ def exclude_filter(directory_path, path, basename=None):
     """ Starting from directory_path evaluates all
         local excludes to see if path is to be filtered.
         path is assumed to be a relative path into directory_path.
+        A path/name is filtered if name is excluded in path/UPBACK_EXCLUDE_FILE
+        or if path is excluded from .. (and recursively up).
         An actual file/dir at path is not required to exist.
     """
     if not is_path_local(directory_path):
