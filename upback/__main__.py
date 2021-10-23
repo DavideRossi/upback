@@ -51,7 +51,7 @@ def main():
         if e.code != STATUS_OK:
             exit_status = STATUS_ERROR
     except Exception as e:
-        print e.message
+        print(e.message)
         exit_status = STATUS_ERROR
     sys.exit(exit_status)
 
