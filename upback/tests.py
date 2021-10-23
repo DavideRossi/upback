@@ -126,7 +126,7 @@ class UpbackTestCase(unittest.TestCase):
         #relativize path contents wrt subdir
         if cls.subdir is not None:
             new_path_contents = {}
-            for path, path_element in cls.path_contents.iteritems():
+            for path, path_element in cls.path_contents.items():
                 if path.startswith(cls.subdir+"/"):
                     path = path[len(cls.subdir+"/"):]
                     path_element.path = path
@@ -180,15 +180,15 @@ class UpbackTestCase(unittest.TestCase):
                 path_entry = PathElement.from_json(path_json)
                 paths[path_entry.path] = path_entry
         if len(paths) != len(path_elements):
-            logging.warn("size differs")
+            logging.warning(f'size differs: {paths} vs {path_elements}')
             return False
         for path, path_element in path_elements:
             if not path in paths:
-                logging.warn("path "+path+" not found")
+                logging.warning("path "+path+" not found")
                 return False
             other_path_element = paths[path]
             if not self.paths_elements_are_matching(path_element, other_path_element):
-                logging.warn("path "+path+" not equal")
+                logging.warning("path "+path+" not equal")
                 return False
         return True
 
@@ -704,6 +704,7 @@ if __name__ == '__main__':
     suite = loader.loadTestsFromTestCase(UpbackTestCase)
     UpbackTestCase.setUpRemoteRoot(tempfile.mkdtemp(prefix="upback_remote"))
     unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = loader.loadTestsFromTestCase(UpbackTestCase)
     UpbackTestCase.setUpSubdir("c/local2")
     unittest.TextTestRunner(verbosity=2).run(suite)
 # uncomment this to perform the tests on a "real" remote branch

@@ -96,7 +96,7 @@ class RClone(object):
             it with rclone
         """
         tmp_fp, tmp_filename = tempfile.mkstemp()
-        os.write(tmp_fp, content)
+        os.write(tmp_fp, bytes(content, encoding='UTF-8'))
         os.close(tmp_fp)
         self.move(tmp_filename, path)
 
@@ -104,6 +104,6 @@ class RClone(object):
         """ Invoke rclone with the given arguments """
         args = [self.rclone_file] + args
         logging.info("Running "+str(args))
-        output = subprocess.check_output(args, stderr=subprocess.STDOUT)
+        output = subprocess.check_output(args, stderr=subprocess.STDOUT, encoding='UTF-8')
         logging.log(logging.INFO-1, "Output: "+output)
         return output
