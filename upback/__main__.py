@@ -19,9 +19,9 @@ def main():
                                       usage="%(prog)s {[{init-push|init-pull} remote [remote-backup-dir [remote-backup-suffix]]]|[resume]} [-i] [-v] [-vv] [--rclone-path path] [--rclone-executable exec]")
     _parser.add_argument("--rclone-path")
     _parser.add_argument("--rclone-executable")
-    _parser.add_argument("-i", action='store_true')
-    _parser.add_argument("-v", action='store_true')
-    _parser.add_argument("-vv", action='store_true')
+    _parser.add_argument("-i", action='store_true', help="interactive mode")
+    _parser.add_argument("-v", action='store_true', help="verbose")
+    _parser.add_argument("-vv", action='store_true', help="more verbose")
     _arguments, _other_arguments = _parser.parse_known_args()
     if _other_arguments and (_other_arguments[0] == "init-push" or _other_arguments[0] == "init-pull"):
         _parser = argparse.ArgumentParser(description="UpBack a file synchronization utility", usage="%(prog)s [{init-push|init-pull} remote [remote-backup-dir [remote-backup-suffix]]] [--rclone-path path] [--rclone-executable exec]")
