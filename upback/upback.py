@@ -408,7 +408,7 @@ def init_pull():
     else: #TODO: part of an existing UpBack backup branch but no remote - does it make sense?
         configuration.read_file(backup_config)
     #sync remote -> local
-    args = ["sync", configuration.remote, "."]
+    args = ["sync", "--create-empty-src-dirs", configuration.remote, "."]
     rclone = RClone()
     rclone.run(args)
     save_backup(".", configuration.remote)
