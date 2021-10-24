@@ -9,8 +9,9 @@ rclone is used to access the remote storage so you should be able to use UpBack 
 
 Status
 ------
-In its current form UpBack is far from being production-ready code: *USE IT AT YOUR OWN RISK*. 
-It is published mainly to be tested and gather bug reports and feedbacks.
+In its current form UpBack is far from being production-ready code: *USE IT AT YOUR OWN RISK*.  
+The current version of UpBack requires Python 3. If you need a version supporting Python 2.7 you should check out the branch `python27`.  
+UpBack now supports *doublestar matches* in local exclude files, check the docs below.
 
 Installation
 ------------
@@ -44,7 +45,7 @@ UpBack always assumes you want to synchronize from the current directory so the 
 ::
   upback
 
-this will look for the configuration files previously created with the init option in the current dir or in one of its ancestors.
+this will look for the configuration files previously created with the `init` option in the current dir or in one of its ancestors.
 If the current directory is not the root of a local branch only a partial synchronization from the current level and below will be performed.
 This allows you to perform a partial synchronization without the need to operate on the whole branch.
 UpBack will then perform all the operations needed so that the local and the remote branches are synchronized without the risk of losing data (that means that a file is overwritten only by newer versions, or that a file is removed only if it was removed from the other side and the other side contains a fresher version of the  files).
@@ -56,7 +57,7 @@ Once the conflict file contains all the resolutions you can resume UpBack:
 
 Common options
 --------------
-There are several command line options that can be used to configure the behavior of UpBack.
+These are some command line options that can be used to configure the behavior of UpBack.
 The most common ones are:
 
 * -v
@@ -71,19 +72,15 @@ interactive. Asks before performing synchronization operations.
 Exclude (ignore) files and directories
 --------------------------------------
 There are two ways to exclude single files or whole branches from the fileset that is synchronized.
-The first way is to use the "global_excludes" field in .upback.config. This is simply a list of the (relative path of the) elements that should not be considered.
-The second way is to use .upback.exclude files.
-Each line in a .upback.exclude file is a pattern against which elements in THE SAME directory containing the .upback.exclude are matched. 
+The first way is to use the `global_excludes` field in `.upback.config`. This is simply a list of the (relative path of the) elements that should not be considered.  
+The second way is to use `.upback.exclude` files.
+Each line in a `.upback.exclude` file is a pattern against which elements in THE SAME directory containing the .upback.exclude are matched.
+It is also possible to apply the exclusion to files in subdirectories by prepending a `**/` in front of the pattern (so `**/*.csv`) excludes all `*.cvs` files in the current directory and in all its subdirectories as well.
 If the match succeeds the element (can be a file or a sub directory) is ignored.
-Of course, in the case of a sub directory, everything inside that sub directory is ignored as well.
-Notice that this applies only to elements of a local filesystem; .upback.exclude in remote filesystems are NOT processed.
-Be warned that this could result in some counter intuitive behavior when items are added to a .upback.exclude file AFTER having been synchronized already: 
-suppose you have a a/b.txt file and that, after having that synchronized with a remote, you decide to create a a/.upback.exclude containing “b.txt”.
-When you run UpBack, it does not see a/b.txt in the local fileset (because it is excluded) but it does see remote:a/b.txt in the remote fileset because 
-that has been created in a previous synchronization.
-As a result the local a/b.txt (that is invisible to the eye of UpBack) is overwritten with the (possibly outdated) version stored in remote. 
-Please understand that this can cause DATA LOSS so be very careful. I’m thinking about a better way to deal with these cases, when I find a convincing approach I will implement it 
-(and I’m open to suggestions, you can create an enhancement issue in GitHub to get in touch).
+Of course, in the case the matching element is subdirectory, everything inside that subdirectory is ignored as well.
+Notice that this applies only to elements of a local filesystem; `.upback.exclude` in remote filesystems are NOT processed.
+Be warned that this could result in some counter intuitive behavior when items are excluded locally by using `.upback.exclude` but files with the same path are available at the remote: UpBack will see no local file and will try to copy from remote to local to achieve synchronization, but this way it could end up overwriting local files (it is unaware of since they are excluded) with the versions in remote (that could be older revisions or have a completely different content).
+Please understand that this can cause DATA LOSS so be very careful. I’m thinking about a better way to deal with these cases, when I find a convincing approach I will implement it (and I’m open to suggestions, you can create an enhancement issue in GitHub to get in touch).
 
 FAQ
 ---
