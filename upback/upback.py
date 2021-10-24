@@ -53,7 +53,7 @@ def exclude(directory_path):
             lines += exclude_fp.read().splitlines()
     return lines
 
-def exclude_filter(directory_path, path, basename=None):
+def exclude_filter(directory_path, path, exclude_cache=None, basename=None):
     """ Starting from directory_path evaluates all
         local excludes to see if path is to be filtered.
         path is assumed to be a relative path into directory_path.
@@ -70,19 +70,26 @@ def exclude_filter(directory_path, path, basename=None):
         basename = tail #we store this to later support subdir wildcards like **/match
     else:
         basename = tail+"/"+basename
-    local_excludes = exclude(os.path.join(directory_path, head))
+    path_to_local_exclude = os.path.join(directory_path, head)
+    if exclude_cache is not None and path_to_local_exclude in exclude_cache:
+        local_excludes = exclude_cache[path_to_local_exclude]
+    else:
+        local_excludes = exclude(path_to_local_exclude)
+        if exclude_cache is not None:
+            exclude_cache[path_to_local_exclude] = local_excludes
     for local_exclude in local_excludes:
         if wildcard_match(tail, basename, local_exclude):
             return True
-    return exclude_filter(directory_path, head, basename)
+    return exclude_filter(directory_path, head, exclude_cache, basename)
 
 def filter_exclude_paths(base_path, paths):
     """ Apply exclude_filter to a set of paths relative
         to a base_path
     """
-    retval = dict()
+    retval = {}
+    exclude_cache = {}
     for path in paths.keys():
-        if not exclude_filter(base_path, path):
+        if not exclude_filter(base_path, path, exclude_cache):
             retval[path] = paths[path]
     return retval
 
