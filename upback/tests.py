@@ -640,6 +640,37 @@ class UpbackTestCase(unittest.TestCase):
         self.assertTrue(local_matches)
         self.assertTrue(remote_matches)
 
+    def test_local_doublestar_exclude_file(self):
+        """ exclude a file by local exclude using the **/path wildcard """
+        #create exclude file and delete excluded file in remote
+        excluded_file_path = "a/e/exclude/exclude.me"
+        exclude_file_path = "a/e/"+UPBACK_EXCLUDE_FILE
+        exclude_file_contents = "**/exclude.me"
+        self.file_contents[exclude_file_path] = exclude_file_contents
+        self.write_file_local(exclude_file_path)
+        self.rclone.delete(self.remote+"/"+excluded_file_path)
+        #now excluded_file_path exists in local and does not exist in remote
+        self.run_upback_from(self.local)
+        #we expect to find the exclude file AND the excluded file in local
+        self.path_contents[exclude_file_path] = PathElement(exclude_file_path, is_directory=False, size=len(exclude_file_contents))
+        contents = self.path_contents.items()
+        local_matches = self.path_contains(self.local, contents)
+        #we expect to find the exclude file BUT NOT the excluded file in remote
+        path_element = self.path_contents[excluded_file_path]
+        del self.path_contents[excluded_file_path]
+        contents = self.path_contents.items()
+        remote_matches = self.path_contains(self.remote, contents)
+        #restore
+        self.path_contents[excluded_file_path] = path_element
+        del self.path_contents[exclude_file_path]
+        del self.file_contents[exclude_file_path]
+        self.rclone.delete(self.local+"/"+exclude_file_path)
+        self.rclone.delete(self.remote+"/"+exclude_file_path)
+        self.run_upback_from(self.local)
+        #assert
+        self.assertTrue(local_matches)
+        self.assertTrue(remote_matches)
+
     def test_local_exclude_branch(self):
         """ exclude a branch by local exclude """
         #create exclude file and delete excluded file in remote
@@ -652,6 +683,43 @@ class UpbackTestCase(unittest.TestCase):
         self.rclone.purge(self.remote+"/"+excluded_dir_path)
         #now excluded_file_path exists in local and does not exist in remote
         self.run_upback_from(self.local)
+        #we expect to find the exclude file AND the excluded branch in local
+        self.path_contents[exclude_file_path] = PathElement(exclude_file_path, is_directory=False, size=len(exclude_file_contents))
+        contents = self.path_contents.items()
+        local_matches = self.path_contains(self.local, contents)
+        #we expect to find the exclude file BUT NOT the excluded file in remote
+        path_file_element = self.path_contents[excluded_file_path]
+        path_dir_element = self.path_contents[excluded_dir_path]
+        del self.path_contents[excluded_file_path]
+        del self.path_contents[excluded_dir_path]
+        contents = self.path_contents.items()
+        remote_matches = self.path_contains(self.remote, contents)
+        #restore
+        self.path_contents[excluded_file_path] = path_file_element
+        self.path_contents[excluded_dir_path] = path_dir_element
+        del self.path_contents[exclude_file_path]
+        del self.file_contents[exclude_file_path]
+        self.rclone.delete(self.local+"/"+exclude_file_path)
+        self.rclone.delete(self.remote+"/"+exclude_file_path)
+        self.run_upback_from(self.local)
+        #assert
+        self.assertTrue(local_matches)
+        self.assertTrue(remote_matches)
+
+    def test_local_doublestart_exclude_branch(self):
+        """ exclude a branch by local exclude using the **/path wildcard """
+        #create exclude file and delete excluded path in remote
+        excluded_file_path = "a/e/exclude/exclude.me"
+        excluded_dir_path = "a/e/exclude"
+        exclude_file_path = "a/"+UPBACK_EXCLUDE_FILE
+        exclude_file_contents = "**/exclude"
+        self.file_contents[exclude_file_path] = exclude_file_contents
+        self.write_file_local(exclude_file_path)
+        self.rclone.purge(self.remote+"/"+excluded_dir_path)
+        #now excluded_dir_path/* exists in local and does not exist in remote
+        self.run_upback_from(self.local)
+        #without exclusion the branch would be removed from local to achieve synchronization
+        #but the local branch in invisible to UpBack so nothing should happen and
         #we expect to find the exclude file AND the excluded branch in local
         self.path_contents[exclude_file_path] = PathElement(exclude_file_path, is_directory=False, size=len(exclude_file_contents))
         contents = self.path_contents.items()
@@ -711,5 +779,6 @@ if __name__ == '__main__':
 #    UpbackTestCase.setUpRemoteRoot("gdrive:Back")
 #    UpbackTestCase.setUpSubdir(None)
 #    unittest.TextTestRunner(verbosity=2).run(suite)
+#    suite = loader.loadTestsFromTestCase(UpbackTestCase)
 #    UpbackTestCase.setUpSubdir("c/local2")
 #    unittest.TextTestRunner(verbosity=2).run(suite)
