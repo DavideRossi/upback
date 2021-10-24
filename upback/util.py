@@ -15,7 +15,10 @@ def wildcard_match(item, base, wildcard):
     """
     if wildcard.startswith("**/"):
         wildcard = wildcard[3:]
-        return fnmatch.fnmatch(base, wildcard)
+        for base_element in base.split("/"):
+            if fnmatch.fnmatch(base_element, wildcard):
+                return True
+        return False
     else:
         return fnmatch.fnmatch(item, wildcard)
 

@@ -68,6 +68,8 @@ def exclude_filter(directory_path, path, basename=None):
     (head, tail) = os.path.split(path)
     if basename is None:
         basename = tail #we store this to later support subdir wildcards like **/match
+    else:
+        basename = tail+"/"+basename
     local_excludes = exclude(os.path.join(directory_path, head))
     for local_exclude in local_excludes:
         if wildcard_match(tail, basename, local_exclude):
