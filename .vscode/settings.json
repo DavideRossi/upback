@@ -1,12 +1,13 @@
 {
     "cSpell.words": [
-        "UPBACK",
         "fnmatch",
         "lsjson",
+        "prepending",
         "pylint",
-        "rclone"
+        "rclone",
+        "UPBACK"
     ],
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
-    "python.pythonPath": "/usr/bin/python"
+    "python.pythonPath": "/bin/python3"
 }
