@@ -9,8 +9,10 @@ rclone is used to access the remote storage so you should be able to use UpBack 
 
 Status
 ------
-In its current form UpBack is far from being production-ready code: *USE IT AT YOUR OWN RISK*.  
-The current version of UpBack requires Python 3. If you need a version supporting Python 2.7 you should check out the branch `python27`.  
+In its current form UpBack is far from being production-ready code: *USE IT AT YOUR OWN RISK*.
+
+The current version of UpBack requires Python 3. If you need a version supporting Python 2.7 you should check out the branch `python27`.
+
 UpBack now supports *doublestar matches* in local exclude files, check the docs below.
 
 Installation
