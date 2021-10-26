@@ -11,7 +11,7 @@ Status
 ------
 In its current form UpBack is far from being production-ready code: *USE IT AT YOUR OWN RISK*.
 
-The current version of UpBack requires Python 3. If you need a version supporting Python 2.7 you should check out the branch `python27`.
+The current version of UpBack requires Python 3. If you need a version supporting Python 2.7 you should check out the branch ``python27``.
 
 UpBack now supports *doublestar matches* in local exclude files, check the docs below.
 
@@ -47,7 +47,7 @@ UpBack always assumes you want to synchronize from the current directory so the 
 ::
   upback
 
-this will look for the configuration files previously created with the `init` option in the current dir or in one of its ancestors.
+this will look for the configuration files previously created with the ``init`` option in the current dir or in one of its ancestors.
 If the current directory is not the root of a local branch only a partial synchronization from the current level and below will be performed.
 This allows you to perform a partial synchronization without the need to operate on the whole branch.
 UpBack will then perform all the operations needed so that the local and the remote branches are synchronized without the risk of losing data (that means that a file is overwritten only by newer versions, or that a file is removed only if it was removed from the other side and the other side contains a fresher version of the  files).
@@ -74,14 +74,14 @@ interactive. Asks before performing synchronization operations.
 Exclude (ignore) files and directories
 --------------------------------------
 There are two ways to exclude single files or whole branches from the fileset that is synchronized.
-The first way is to use the `global_excludes` field in `.upback.config`. This is simply a list of the (relative path of the) elements that should not be considered.  
-The second way is to use `.upback.exclude` files.
-Each line in a `.upback.exclude` file is a pattern against which elements in THE SAME directory containing the .upback.exclude are matched.
-It is also possible to apply the exclusion to files in subdirectories by prepending a `**/` in front of the pattern; so `**/*.csv` excludes all `*.cvs` files in the current directory and in all its subdirectories as well.
+The first way is to use the ``global_excludes`` field in ``.upback.config``. This is simply a list of the (relative path of the) elements that should not be considered.  
+The second way is to use ``.upback.exclude`` files.
+Each line in a ``.upback.exclude`` file is a pattern against which elements in THE SAME directory containing the ``.upback.exclude`` are matched.
+It is also possible to apply the exclusion to files in subdirectories by prepending a ``**/`` in front of the pattern; so ``**/*.csv`` excludes all ``*.cvs`` files in the current directory and in all its subdirectories as well.
 If the match succeeds the element (can be a file or a sub directory) is ignored.
 Of course, in the case the matching element is subdirectory, everything inside that subdirectory is ignored as well.
-Notice that this applies only to elements of a local filesystem; `.upback.exclude` in remote filesystems are synched but are NOT processed.
-Be warned that this could result in some counter intuitive behavior when items are excluded locally by using `.upback.exclude` but files with the same path are available at the remote: UpBack will see no local file and will try to copy from remote to local to achieve synchronization, but this way it could end up overwriting local files (it is unaware of, since they are excluded) with the versions in remote (that could be older revisions or have a completely different content).
+Notice that this applies only to elements of a local filesystem; ``.upback.exclude`` in remote filesystems are synched but are NOT processed.
+Be warned that this could result in some counter intuitive behavior when items are excluded locally by using ``.upback.exclude`` but files with the same path are available at the remote: UpBack will see no local file and will try to copy from remote to local to achieve synchronization, but this way it could end up overwriting local files (it is unaware of, since they are excluded) with the versions in remote (that could be older revisions or have a completely different content).
 Please understand that this can cause DATA LOSS so be very careful. I’m thinking about a better way to deal with these cases, when I find a convincing approach I will implement it (and I’m open to suggestions, you can create an enhancement issue in GitHub to get in touch).
 
 FAQ
@@ -89,9 +89,9 @@ FAQ
 * Are symlinks supported?
 No, symlinks are deliberately skipped. 
 If you need them consider to store the "real" files and directories in the local backup branch and link to it from somewhere else.
-For example, if you want to backup a src/myproject directory that is outside an UpBack backup branch, put the real myproject directory inside the local UpBack branch, then link it from src/.
+For example, if you want to backup a ``src/myproject`` directory that is outside an UpBack backup branch, put the real ``myproject`` directory inside the local UpBack branch, then link it from ``src/``.
 
-This could change in the future, maybe I could use the git approach: when copying from local to remote transform the link to a special text file contaning the path pointed by the symling; when copyng from remote create a symlink in local pointing to the path stored in the text file in remote.
+This could change in the future, maybe I could use the git approach: when copying from local to remote transform the link to a special text file contaning the path pointed by the symling; when copyng from remote create a symlink in local pointing to the path stored in the text file in remote. But then I need a way to understand that a file in remote is a special link file...
 
 * What happens if I decide to ignore a conflict
 One of the options that can be specified in the conflict file is to ignore a path.
@@ -100,8 +100,8 @@ Be aware that, the next time you run UpBack it will keep complaining about that 
 * How do I report a bug?
 Please use github's issue tracker https://github.com/DavideRossi/upback/issues
 
-* What is that .upback.config file I see on the local root of an UpBack branch?
+* What is that ``.upback.config`` file I see on the local root of an UpBack branch?
 This is a configuration file storing the details about the backup branch. It is a JSON file and can be edited.
 
-* What is that .upback.remote file I see on the local root of an UpBack branch?
+* What is that ``.upback.remote`` file I see on the local root of an UpBack branch?
 That is the last contents of the remote branch seen by UpBack, it is used to decide which operations on the remote branch are to be considered new with respect to the last time UpBack has been executed.
