@@ -527,7 +527,7 @@ def upback():
                 if configuration.verbose or configuration.interactive:
                     print(operations.pretty_format())
                 if not configuration.interactive or \
-                   raw_input("Proceed with these operations ? (Y/N) ").lower() == "y":
+                   input("Proceed with these operations ? (Y/N) ").lower() == "y":
                     #perform operations
                     perform_operations(operations, paths_a, paths_b, configuration.remote, rel_path,
                                        configuration.no_backup, configuration.remote_backup,
