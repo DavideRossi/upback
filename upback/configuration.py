@@ -5,7 +5,28 @@ import datetime
 
 from .const import *
 
-class Configuration(object):
+class ConfigurationOptions:
+    """ Field names for Configuration
+    """
+    INIT_PULL = "init_pull"
+    INIT_PUSH = "init_push"
+    RESUME = "resume"
+    FORCE = "force"
+    RCLONE_PATH = "rclone_path"
+    RCLONE_EXECUTABLE = "rclone_executable"
+    INTERACTIVE = "interactive"
+    VERBOSE = "verbose"
+    VERBOSE_L2 = "verbose_l2"
+    CONF_PATH = "conf_path"
+    RCLONE_EXECUTABLE_DEFAULT = "rclone"
+    REMOTE = "remote"
+    REMOTE_BACKUP_DIR = "remote_backup_dir"
+    REMOTE_BACKUP_SUFFIX = "remote_backup_suffix"
+    OPT_INTERACTIVE = "i"
+    OPT_VERBOSE = "v"
+    OPT_VERBOSE_L2 = "vv"
+
+class Configuration(ConfigurationOptions):
     """ Configuration class
         Fields are read from json file
     """
@@ -20,55 +41,47 @@ class Configuration(object):
     def setup(self, arguments):
         """ Initialization method, called on singleton instantiation """
         arguments_map = vars(arguments)
-        self.nonpersistent_settings = ["nonpersistent_settings"]
-        self.init_pull = True if "init_pull" in arguments_map else False
-        self.nonpersistent_settings.append("init_pull")
-        self.init_push = True if "init_push" in arguments_map else False
-        self.nonpersistent_settings.append("init_push")
-        self.resume = True if "resume" in arguments_map else False
-        self.nonpersistent_settings.append("resume")
-        self.force = True if "force" in arguments_map else False
-        self.nonpersistent_settings.append("force")
-        if "rclone_path" in arguments_map and arguments_map["rclone_path"]:
-            self.rclone_path = arguments_map["rclone_path"]
+        self.nonpersistent_settings = [ # These are the settings that are not written to disk when calling write()
+            self.INIT_PULL, self.INIT_PUSH, self.RESUME, self.FORCE, self.RCLONE_PATH, self.RCLONE_EXECUTABLE,
+            self.INTERACTIVE, self.VERBOSE, self.VERBOSE_L2, self.CONF_PATH] 
+        self.init_pull = self.INIT_PULL in arguments_map
+        self.init_push = self.INIT_PUSH in arguments_map
+        self.resume = self.RESUME in arguments_map
+        self.force = self.FORCE in arguments_map
+        if self.RCLONE_PATH in arguments_map and arguments_map[self.RCLONE_PATH]:
+            self.rclone_path = arguments_map[self.RCLONE_PATH]
         else:
             self.rclone_path = ""
-        self.nonpersistent_settings.append("rclone_path")
-        if "rclone_executable" in arguments_map and arguments_map["rclone_executable"]:
-            self.rclone_executable = arguments_map["rclone_executable"]
+        if self.RCLONE_EXECUTABLE in arguments_map and arguments_map[self.RCLONE_EXECUTABLE]:
+            self.rclone_executable = arguments_map[self.RCLONE_EXECUTABLE]
         else:
-            self.rclone_executable = "rclone"
-        self.nonpersistent_settings.append("rclone_executable")
-        if "remote" in arguments_map and arguments_map["remote"]:
-            self.remote = arguments_map["remote"]
+            self.rclone_executable = self.RCLONE_EXECUTABLE_DEFAULT
+        if self.REMOTE in arguments_map and arguments_map[self.REMOTE]:
+            self.remote = arguments_map[self.REMOTE]
         else:
             self.remote = None
-        if "remote_backup_dir" in arguments_map and arguments_map["remote_backup_dir"]:
-            self.remote_backup = arguments_map["remote_backup_dir"]
+        if self.REMOTE_BACKUP_DIR in arguments_map and arguments_map[self.REMOTE_BACKUP_DIR]:
+            self.remote_backup = arguments_map[self.REMOTE_BACKUP_DIR]
         else:
             self.remote_backup = None
-        if "remote_backup_suffix" in arguments_map and arguments_map["remote_backup_suffix"]:
-            self.backup_suffix = datetime.datetime.now().strftime(arguments_map["remote_backup_suffix"])
+        if self.REMOTE_BACKUP_SUFFIX in arguments_map and arguments_map[self.REMOTE_BACKUP_SUFFIX]:
+            self.backup_suffix = datetime.datetime.now().strftime(arguments_map[self.REMOTE_BACKUP_SUFFIX])
         else:
             self.backup_suffix = datetime.datetime.now().strftime(BACKUP_SUFFIX_DEFAULT)
-        if "i" in arguments_map and arguments_map["i"]:
+        if self.OPT_INTERACTIVE in arguments_map and arguments_map[self.OPT_INTERACTIVE]:
             self.interactive = True
         else:
             self.interactive = False
-        self.nonpersistent_settings.append("interactive")
-        if "v" in arguments_map and arguments_map["v"]:
+        if self.OPT_VERBOSE in arguments_map and arguments_map[self.OPT_VERBOSE]:
             self.verbose = True
         else:
             self.verbose = False
-        self.nonpersistent_settings.append("verbose")
-        if "vv" in arguments_map and arguments_map["vv"]:
+        if self.OPT_VERBOSE_L2 in arguments_map and arguments_map[self.OPT_VERBOSE_L2]:
             self.verbose = True
             self.verbose_l2 = True
         else:
             self.verbose_l2 = False
-        self.nonpersistent_settings.append("verbose_l2")
         self.conf_path = ""
-        self.nonpersistent_settings.append("conf_path")
         self.no_backup = False
         self.global_excludes = []
 
