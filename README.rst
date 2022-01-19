@@ -91,7 +91,7 @@ No, symlinks are deliberately skipped.
 If you need them consider to store the "real" files and directories in the local backup branch and link to it from somewhere else.
 For example, if you want to backup a ``src/myproject`` directory that is outside an UpBack backup branch, put the real ``myproject`` directory inside the local UpBack branch, then link it from ``src/``.
 
-This could change in the future, maybe I could use the git approach: when copying from local to remote transform the link to a special text file contaning the path pointed by the symling; when copyng from remote create a symlink in local pointing to the path stored in the text file in remote. But then I need a way to understand that a file in remote is a special link file...
+This could change in the future, maybe I could use the git approach: when copying from local to remote transform the link to a special text file contaning the path pointed by the symlink; when copyng from remote create a symlink in local pointing to the path stored in the text file in remote. But then I need a way to understand that a file in remote is a special link file...
 
 * What happens if I decide to ignore a conflict
 One of the options that can be specified in the conflict file is to ignore a path.
